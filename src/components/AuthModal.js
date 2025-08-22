@@ -8,7 +8,7 @@ export default function AuthModal({ isOpen, onClose, isLogin = true }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState(null);
-  const { login } = useAuth();
+  const { login,user } = useAuth();
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -20,11 +20,13 @@ export default function AuthModal({ isOpen, onClose, isLogin = true }) {
         body: JSON.stringify({ email, password, name, phone }),
       });
       let response = await res.json();
+      response = response.data;
       console.log(response);
       if (!res.ok) {
         throw new Error("Error en la autenticación");
       }
       login(response.user, response.access_token);
+      window.location.replace("/admin");
     } catch (err) {
         console.log(err);
       setError(err.message);
