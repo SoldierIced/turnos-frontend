@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/es";
-import "react-big-calendar/lib/css/react-big-calendar.css";
 import { useAuth } from "@/components/hooks/useAuth";
 
 moment.locale("es");

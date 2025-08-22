@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 export const Utils = {
     getOrDefault(key, defaultValue, parser = v => v) {
         const value = Cookies.get(key);
+        console.log(key, value);
         if (value === undefined) return defaultValue;
 
         try {

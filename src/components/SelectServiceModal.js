@@ -113,7 +113,7 @@ export default function SelectServiceModal({ isOpen, onClose, onSave, token, sel
             Cancelar
           </button>
           <button
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="text-army text-white px-4 py-2 rounded"
             onClick={handleSave}
             disabled={!selectedService}
           >

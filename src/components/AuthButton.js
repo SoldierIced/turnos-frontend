@@ -1,52 +1,61 @@
 "use client";
-import {useEffect, useState} from "react";
+import { useState } from "react";
 import AuthModal from "./AuthModal";
-import {useAuth} from "@/components/hooks/useAuth";
+import { useAuth } from "@/components/hooks/useAuth";
 
 export default function AuthButton() {
     const [isOpen, setIsOpen] = useState(false);
     const [isLogin, setIsLogin] = useState(true);
-    const {user, logout} = useAuth();
+    const { user, logout } = useAuth();
+
+    // 🔹 Clase base para los botones
+    const baseBtn =
+        "px-4 py-2 rounded-lg font-medium transition " +
+        "bg-army text-white " +
+        "hover:bg-army-700 focus:ring-2 focus:ring-army-500 focus:outline-none " +
+        "active:scale-95";
 
     return (
-        (!user) ?
-            <div>
-                {/* Botón de Login */}
-                <button
-                    onClick={() => {
-                        setIsLogin(true);
-                        setIsOpen(true);
-                    }}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition"
-                >
-                    Iniciar Sesión
-                </button>
+        <div className="flex gap-3">
+            {!user ? (
+                <>
+                    {/* Botón de Login */}
+                    <button
+                        onClick={() => {
+                            setIsLogin(true);
+                            setIsOpen(true);
+                        }}
+                        className={baseBtn}
+                    >
+                        Iniciar Sesión
+                    </button>
 
-                {/* Botón de Registro */
-                }
-                <button
-                    onClick={() => {
-                        setIsLogin(false);
-                        setIsOpen(true);
-                    }}
-                    className="ml-4 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-700 transition"
-                >
-                    Registrarse
-                </button>
+                    {/* Botón de Registro */}
+                    <button
+                        onClick={() => {
+                            setIsLogin(false);
+                            setIsOpen(true);
+                        }}
+                        className={baseBtn}
+                    >
+                        Registrarse
+                    </button>
 
-                {/* Modal de Autenticación */
-                }
-                <AuthModal isOpen={isOpen} onClose={() => setIsOpen(false)} isLogin={isLogin}/>
-            </div> : <div>
+                    {/* Modal */}
+                    <AuthModal
+                        isOpen={isOpen}
+                        onClose={() => setIsOpen(false)}
+                        isLogin={isLogin}
+                    />
+                </>
+            ) : (
                 <button
-                    onClick={() => {
-                        logout();
-                    }}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition"
+                    onClick={logout}
+                    className={baseBtn}
                 >
                     Cerrar Sesión
                 </button>
-            </div>
-    )
-        ;
+            )}
+        </div>
+    );
 }

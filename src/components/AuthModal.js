@@ -8,7 +8,8 @@ export default function AuthModal({ isOpen, onClose, isLogin = true }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState(null);
-  const { login,user } = useAuth();
+  const { login } = useAuth();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -19,16 +20,16 @@ export default function AuthModal({ isOpen, onClose, isLogin = true }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name, phone }),
       });
+
       let response = await res.json();
       response = response.data;
-      console.log(response);
-      if (!res.ok) {
-        throw new Error("Error en la autenticación");
-      }
+
+      if (!res.ok) throw new Error("Error en la autenticación");
+
       login(response.user, response.access_token);
       window.location.replace("/admin");
     } catch (err) {
-        console.log(err);
+      console.log(err);
       setError(err.message);
     }
   };
@@ -36,27 +37,80 @@ export default function AuthModal({ isOpen, onClose, isLogin = true }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-xl font-bold mb-4">
-          {isLogin ? "Iniciar Sesión" : "Registrarse"}
-        </h2>
-        {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          {!isLogin && (
-            <>
-              <input type="text" placeholder="Nombre" className="p-2 border rounded" value={name} onChange={(e) => setName(e.target.value)} required />
-              <input type="text" placeholder="Teléfono" className="p-2 border rounded" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-            </>
-          )}
-          <input type="email" placeholder="Correo" className="p-2 border rounded" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          <input type="password" placeholder="Contraseña" className="p-2 border rounded" value={password} onChange={(e) => setPassword(e.target.value)} required />
-          <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-700 transition">
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Fondo con imagen */}
+        <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: "url('/fondo.jpg')",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+        ></div>
+
+        {/* Overlay oscuro */}
+        <div className="absolute inset-0 bg-black/60"></div>
+
+        {/* Modal */}
+        <div className="relative bg-white p-8 rounded-xl shadow-2xl w-96 z-10">
+          <h2 className="text-2xl font-bold text-center text-army mb-4">
             {isLogin ? "Iniciar Sesión" : "Registrarse"}
+          </h2>
+
+          {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            {!isLogin && (
+                <>
+                  <input
+                      type="text"
+                      placeholder="Nombre"
+                      className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-army-500"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                  />
+                  <input
+                      type="text"
+                      placeholder="Teléfono"
+                      className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-army-500"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                  />
+                </>
+            )}
+            <input
+                type="email"
+                placeholder="Correo"
+                className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-army-500"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+            />
+            <input
+                type="password"
+                placeholder="Contraseña"
+                className="p-2 border rounded focus:outline-none focus:ring-2 focus:ring-army-500"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+            />
+            <button
+                type="submit"
+                className="px-4 py-2 rounded-lg font-semibold transition bg-army text-white hover:bg-army-700 active:scale-95"
+            >
+              {isLogin ? "Iniciar Sesión" : "Registrarse"}
+            </button>
+          </form>
+
+          <button
+              onClick={onClose}
+              className="mt-4 w-full px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+          >
+            Cerrar
           </button>
-        </form>
-        <button onClick={onClose} className="mt-4 text-gray-500 hover:text-gray-700">Cerrar</button>
+        </div>
       </div>
-    </div>
   );
 }

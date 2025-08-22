@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-army: #6F2DA8;       /* principal */
+  --color-army-dark: #5A2089;  /* hover/active */
+  --color-army-selected: #4A176F; /* para estado seleccionado */
 }
 
 @theme inline {
@@ -23,4 +24,99 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+
+/* Texto */
+.text-army {
+  color: var(--color-army);
+}
+
+/* Botones del toolbar */
+.rbc-toolbar button {
+  color: var(--color-army);
+}
+/* Eventos del calendario */
+.rbc-event,
+.rbc-day-slot .rbc-background-event {
+  border: none;
+  box-sizing: border-box;
+  box-shadow: none;
+  margin: 0;
+  padding: 2px 5px;
+  background-color: var(--color-army); /* 💜 ARMY */
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Hover sobre el evento */
+.rbc-event:hover,
+.rbc-day-slot .rbc-background-event:hover {
+  background-color: var(--color-army-dark);
+  opacity: 0.9;
+}
+
+/* Estado "seleccionado" (cuando hacés click) */
+.rbc-event:active,
+.rbc-day-slot .rbc-background-event:active {
+  background-color: var(--color-army-dark);
+}
+
+
+/* Evento seleccionado */
+.rbc-event.rbc-selected,
+.rbc-day-slot .rbc-selected.rbc-background-event {
+  background-color: var(--color-army-selected);
+  color: #fff;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+
+
+/* Botón "mostrar más" cuando hay muchos eventos */
+.rbc-show-more {
+  background-color: rgba(111, 45, 168, 0.15); /* violeta transparente */
+  z-index: 4;
+  font-weight: bold;
+  font-size: 85%;
+  height: auto;
+  line-height: normal;
+  color: var(--color-army);
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.rbc-show-more:hover {
+  background-color: rgba(111, 45, 168, 0.25); /* un poco más fuerte */
+  color: var(--color-army-dark);
+  cursor: pointer;
+}
+
+/* Botones de navegación tipo link */
+.rbc-button-link {
+  color: var(--color-army);
+  background: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.rbc-button-link:hover {
+  color: var(--color-army-dark);
+  text-decoration: underline;
+}
+.bg-army {
+  background-color: #6F2DA8;
+}
+.hover\:bg-army-700:hover {
+  color:white;
+  background-color: #5A2089;
 }
