@@ -15,6 +15,7 @@ import {
     CartesianGrid,
 } from "recharts";
 import AuthButton from "@/components/AuthButton";
+import {Utils} from "@/app/utils/utils";
 
 moment.locale("es");
 const localizer = momentLocalizer(moment);
@@ -39,12 +40,19 @@ export default function Home() {
     const {user, token} = useAuth();
 
     // Inputs
-    const [valor30, setValor30] = useState(() => getOrDefaul("valor30", "20000"));
-    const [valor60, setValor60] = useState(() => getOrDefault("valor60", "30000"));
-    const [meta, setMeta] = useState(() => getOrDefault("meta", "10000000"));
-    const [fechaInicio, setFechaInicio] = useState(() => getOrDefault("fechaInicio", "2025-01-01"));
-
-
+    const [valor30, setValor30] = useState(() => Number(Utils.getOrDefault("valor30", 20000)));
+    const [valor60, setValor60] = useState(() => Number(Utils.getOrDefault("valor60", 30000)));
+    const [meta, setMeta] = useState(() => Number(Utils.getOrDefault("meta", 10000000)));
+    const [fechaInicio, setFechaInicio] = useState(() => Utils.getOrDefault("fechaInicio", "2025-01-01"));
+    // cada vez que cambien los valores -> guardar en cookie
+    useEffect(() => { Utils.setCookie("valor30", valor30); }, [valor30]);
+    useEffect(() => { Utils.setCookie("valor60", valor60); }, [valor60]);
+    useEffect(() => { Utils.setCookie("meta", meta); }, [meta]);
+    useEffect(() => { Utils.setCookie("fechaInicio", fechaInicio); }, [fechaInicio]);
+    console.log(valor30,
+        valor60,
+        meta,
+        fechaInicio);
     // Cálculos
     const [turnosFaltantes, setTurnosFaltantes] = useState(0);
     const [sesionesMes, setSesionesMes] = useState({total: 0, t30: 0, t60: 0});
@@ -162,6 +170,15 @@ export default function Home() {
                 {/* Inputs */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
+                        <label className="text-sm font-semibold text-gray-600">Meta</label>
+                        <input
+                            type="number"
+                            value={meta}
+                            onChange={(e) => setMeta(Number(e.target.value))}
+                            className="w-full p-3 rounded-lg border"
+                        />
+                    </div>
+                    <div>
                         <label className="text-sm font-semibold text-gray-600">
                             Valor 30min
                         </label>
@@ -183,15 +200,7 @@ export default function Home() {
                             className="w-full p-3 rounded-lg border"
                         />
                     </div>
-                    <div>
-                        <label className="text-sm font-semibold text-gray-600">Meta</label>
-                        <input
-                            type="number"
-                            value={meta}
-                            onChange={(e) => setMeta(Number(e.target.value))}
-                            className="w-full p-3 rounded-lg border"
-                        />
-                    </div>
+
                     <div>
                         <label className="text-sm font-semibold text-gray-600">
                             Fecha inicio actividad
@@ -210,7 +219,7 @@ export default function Home() {
                     <Card title="Meta" value={`$${meta.toLocaleString("es-AR")}`}/>
                     <Card
                         title={`Recaudado en ${mesActualNombre}`}
-                        value={`$${recaudadoMes.toLocaleString("es-AR")}`}
+                        value={`${Utils.formatCurrency(recaudadoMes)}`}
                         subtitle={`(${sesionesMes.t30}x30min / ${sesionesMes.t60}x60min)`}
                     />
                     <Card
