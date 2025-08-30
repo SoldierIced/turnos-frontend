@@ -1,13 +1,16 @@
+// app/api/logout/route.js
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 export async function POST() {
-  cookies().set("access_token", "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    path: "/",
-    maxAge: 0, // Expira inmediatamente
-  });
+  const c = await cookies();
+  // Borra cookies que usás para auth
+  c.delete("access_token");
+  c.delete("user");
 
-  return Response.json({ message: "Sesión cerrada" }, { status: 200 });
+  // Si antes usabas otros nombres (token, userData), borralos también:
+  c.delete("token");
+  c.delete("userData");
+
+  return NextResponse.json({ ok: true });
 }

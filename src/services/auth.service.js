@@ -12,7 +12,7 @@ export async function loginUser(email, password) {
         throw new Error(errorData.message || "Error en el login");
     }
 
-    return await res.json();
+    return (await res.json()).data;
 }
 
 export async function registerUser(name, phone, email, password) {
@@ -30,21 +30,22 @@ export async function registerUser(name, phone, email, password) {
     return await res.json();
 }
 
-export async function saveCookie(name, data) {
-
-    // Guardar el token en una cookie HTTP-Only
-    const cookieStore = await cookies();
-    data = (typeof data === "object") ? JSON.stringify(data) : data;
-    // Guardar el token en una cookie HTTP-Only
-    cookieStore.set(name, data, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+export async function saveCookie(name, data, opts = {}) {
+    const cookieStore = await cookies();                // ✅ sin await
+    const value = typeof data === "object" ? JSON.stringify(data) : String(data);
+     cookieStore.set(name, value, {
         path: "/",
-        maxAge: 60 * 60 * 24 * 7, // 7 días
+        sameSite: "lax",                           // 'strict' puede romper redirecciones
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7,                  // 7 días
+        httpOnly: true,                            // por defecto HttpOnly
+        ...opts,
     });
 }
 
+export async function deleteCookie(name) {
+    cookies().delete(name);
+}
 export async function getCookieServer(name) {
     const cookieStore = await cookies();
     let cookieString = cookieStore.get(name);

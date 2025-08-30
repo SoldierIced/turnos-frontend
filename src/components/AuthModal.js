@@ -21,15 +21,12 @@ export default function AuthModal({ isOpen, onClose, isLogin = true }) {
         body: JSON.stringify({ email, password, name, phone }),
       });
 
-      let response = await res.json();
-      response = response.data;
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.message || "Error en la autenticación");
 
-      if (!res.ok) throw new Error("Error en la autenticación");
-
-      login(response.user, response.access_token);
+      // cookies ya seteadas en el server → listo
       window.location.replace("/admin");
     } catch (err) {
-      console.log(err);
       setError(err.message);
     }
   };

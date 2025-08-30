@@ -1,9 +1,14 @@
 "use client";
 import {useEffect, useState} from "react";
-import {Calendar, momentLocalizer} from "react-big-calendar";
+import dynamic from "next/dynamic";
+import {momentLocalizer} from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/es";
 
+const CalendarNoSSR = dynamic(
+    () => import("react-big-calendar").then(m => m.Calendar),
+    {ssr: false}
+);
 import {useAuth} from "@/components/hooks/useAuth";
 import {
     ResponsiveContainer,
@@ -20,6 +25,7 @@ import CantidadPieChart from "@/components/admin/CantidadPieChart";
 import CardEditable from "@/components/admin/CardEditable";
 import Loading from "@/components/Loading";
 
+const ARG_TZ = "America/Argentina/Buenos_Aires";
 moment.locale("es");
 const localizer = momentLocalizer(moment);
 
@@ -61,7 +67,6 @@ export default function Home() {
     const [gastosMensual, setGastosMensual] = useState(0);
 
 
-
     const setters = {
         valor30: setValor30,
         valor60: setValor60,
@@ -72,7 +77,7 @@ export default function Home() {
 
     const changeValueState = (property, value) => {
         if (setters[property]) {
-            Utils.setCookie(property,value);
+            Utils.setCookie(property, value);
             setters[property](value);
         } else {
             console.warn(`No existe el estado con propiedad: ${property}`);
@@ -90,36 +95,59 @@ export default function Home() {
     const [mesActualNombre, setMesActualNombre] = useState("");
     const [date, setDate] = useState(new Date());
     const [view, setView] = useState("month");
-
+    const [fixedNow] = useState(() => {
+        // crea un “now” en la TZ de AR (solo para marcar hoy)
+        const now = new Date();
+        // si querés exactitud de TZ real, podés usar luxon/date-fns-tz,
+        // pero para resaltar el día alcanza con esta referencia
+        return now;
+    });
     useEffect(() => {
 
     }, []);
 
     // Cargar eventos
     useEffect(() => {
-        if (user) {
-            fetch("/api/admin", {
-                method: "GET",
-                headers: {Authorization: `Bearer ${token}`},
-            })
-                .then(async (res) => {
-                    const data = await res.json();
-                    const formatted = data.events.map((ev) => ({
-                        ...ev,
-                        start: new Date(ev.start),
-                        end: new Date(ev.end),
-                    }));
-                    setEvents(formatted);
-                    setValor30(Number(Utils.getOrDefault("valor30", 20000)));
-                    setValor60(Number(Utils.getOrDefault("valor60", 30000)));
-                    setMeta(Number(Utils.getOrDefault("meta", 10000000)));
-                    setFechaInicio(normalizeDate(Utils.getOrDefault("fechaInicio", "2025-01-01")));
-                    setGastosMensual(Number(Utils.getOrDefault("gastosMensual", 700000)));
-                    setLoading(false);
-                })
-                .catch((err) => console.log(err));
-        }
-    }, [user]);
+
+
+        (async () => {
+            setLoading(true);
+            try {
+                const res = await fetch("/api/admin", {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                // Si la API respondió error, salí por aquí
+                if (!res.ok) {
+                    const errBody = await res.text();
+                    console.log(`HTTP ${res.status} ${res.statusText}: ${errBody.slice(0,200)}`);
+                    // window.location.href = "/";
+                }
+
+                const data = await res.json();
+
+                // Asegurá que events sea un array
+                const eventos = Array.isArray(data?.events) ? data.events : [];
+                const formatted = eventos.map(ev => ({
+                    ...ev,
+                    start: new Date(ev.start),
+                    end: new Date(ev.end),
+                }));
+
+                setEvents(formatted);
+                setValor30(Number(Utils.getOrDefault("valor30", 20000)));
+                setValor60(Number(Utils.getOrDefault("valor60", 30000)));
+                setMeta(Number(Utils.getOrDefault("meta", 10000000)));
+                setFechaInicio(normalizeDate(Utils.getOrDefault("fechaInicio", "2025-01-01")));
+                setGastosMensual(Number(Utils.getOrDefault("gastosMensual", 700000)));
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        })();
+    }, [user, token]);
+
 
     function diffMeses(inicio, fin) {
         return (fin.getFullYear() - inicio.getFullYear()) * 12 + (fin.getMonth() - inicio.getMonth() + 1);
@@ -184,7 +212,7 @@ export default function Home() {
         setSesionesMes({total: t30Mes + t60Mes, t30: t30Mes, t60: t60Mes});
         setRecaudadoMes(totalMes - gastosMensual);
         const mesesTranscurridos = diffMeses(new Date(fechaInicio), ahora);
-        console.log(totalGlobal,gastosMensual,mesesTranscurridos)
+        console.log(totalGlobal, gastosMensual, mesesTranscurridos)
         setRecaudadoTotal(totalGlobal - (gastosMensual * mesesTranscurridos));
 
         const valores = Object.values(ingresosPorMes)
@@ -218,7 +246,7 @@ export default function Home() {
     }, [events, valor30, valor60, meta, fechaInicio, gastosMensual]);
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
-            <Loading show={loading} />
+            <Loading show={loading}/>
             {/* Header */}
             <header className="w-full bg-white shadow px-6 py-4 flex items-center justify-between">
                 <h1 className="text-xl font-bold  text-army">Panel de Administración</h1>
@@ -227,13 +255,19 @@ export default function Home() {
 
             <main className="flex-1 container mx-auto px-6 py-8 space-y-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                    <CardEditable title="Objetivo" value={meta} type="number" changeValue={(val)=> changeValueState('meta',val)}/>
-                    <CardEditable title="Valor 30min" value={valor30} type="number" changeValue={(val)=> changeValueState('valor30',val)}/>
-                    <CardEditable title="Valor 60min" value={valor60} type="number" changeValue={(val)=> changeValueState('valor60',val)}/>
-                    <CardEditable title="Gastos mensual" value={gastosMensual} type="number" changeValue={(val)=> changeValueState('gastosMensual',val)}/>
-                    <CardEditable title="Fecha inicio actividad" value={fechaInicio} type="date" changeValue={(val)=> changeValueState('fechaInicio',val)}/>
+                    <CardEditable title="Objetivo" value={meta} type="number"
+                                  changeValue={(val) => changeValueState('meta', val)}/>
+                    <CardEditable title="Valor 30min" value={valor30} type="number"
+                                  changeValue={(val) => changeValueState('valor30', val)}/>
+                    <CardEditable title="Valor 60min" value={valor60} type="number"
+                                  changeValue={(val) => changeValueState('valor60', val)}/>
+                    <CardEditable title="Gastos mensual" value={gastosMensual} type="number"
+                                  changeValue={(val) => changeValueState('gastosMensual', val)}/>
+                    <CardEditable title="Fecha inicio actividad" value={fechaInicio} type="date"
+                                  changeValue={(val) => changeValueState('fechaInicio', val)}/>
 
-                    <Card title={`Recaudado en ${mesActualNombre}`} value={`${Utils.formatCurrency(recaudadoMes)}`} subtitle={`(${sesionesMes.t30}x30min / ${sesionesMes.t60}x60min)`}/>
+                    <Card title={`Recaudado en ${mesActualNombre}`} value={`${Utils.formatCurrency(recaudadoMes)}`}
+                          subtitle={`(${sesionesMes.t30}x30min / ${sesionesMes.t60}x60min)`}/>
                     <Card title="Total Recaudado" value={`$${recaudadoTotal.toLocaleString("es-AR")}`}/>
                     <Card title="Meses faltantes" value={`${turnosFaltantes} meses`} subtitle={minMaxText}/>
                 </div>
@@ -261,8 +295,10 @@ export default function Home() {
                                         return (
                                             <div className="bg-white p-3 shadow rounded text-sm">
                                                 <p className="font-bold">{label}</p>
-                                                <p>Turno de 30m = Cantidad : {data.cantidad30} = ${data.ingreso30.toLocaleString("es-AR")}</p>
-                                                <p>Turno de 60m = Cantidad :  {data.cantidad60} = ${data.ingreso60.toLocaleString("es-AR")}</p>
+                                                <p>Turno de 30m = Cantidad : {data.cantidad30} =
+                                                    ${data.ingreso30.toLocaleString("es-AR")}</p>
+                                                <p>Turno de 60m = Cantidad : {data.cantidad60} =
+                                                    ${data.ingreso60.toLocaleString("es-AR")}</p>
                                                 <p>Gastos = ${data.gastos.toLocaleString("es-AR")}</p>
                                                 <p className="font-semibold text-army">
                                                     Neto = ${data.ingresoNeto.toLocaleString("es-AR")}
@@ -282,7 +318,7 @@ export default function Home() {
                 <div className="bg-white shadow-xl rounded-2xl p-6">
                     <h2 className="text-lg font-bold text-army mb-4">Calendario de turnos</h2>
                     <div style={{height: 500}}>
-                        <Calendar
+                        <CalendarNoSSR
                             localizer={localizer}
                             events={events}
                             startAccessor={(event) => new Date(event.start)}
@@ -294,6 +330,7 @@ export default function Home() {
                             view={view}
                             onView={(newView) => setView(newView)}
                             style={{height: 500}}
+                            getNow={() => fixedNow}
                         />
                     </div>
                 </div>
